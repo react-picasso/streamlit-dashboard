@@ -5,3 +5,6 @@ bin/
 lib/
 share/
 *.cfg
+.streamlit/
+etc/
+*.json

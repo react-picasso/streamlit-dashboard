@@ -36,7 +36,7 @@ goals_diff = []
 count = 0
 while count < 20:
     rank_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["rank"])))
-    team_list.append(str(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["team"]["name"])))
+    team_list.append(str(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["team"]["name"])).strip('"'))
     wins_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["win"])))
     draws_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["draw"])))
     loses_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["lose"])))
@@ -45,11 +45,6 @@ while count < 20:
     goals_against.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["goals"]["against"])))
     goals_diff.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["goalsDiff"])))
     count += 1
-
-stripped_team = []
-for team in team_list:
-    team = team.strip('"')
-    stripped_team.append(team)
 
 class Standings:
     def drop(self):
@@ -61,7 +56,7 @@ class Standings:
         print("Standings table dropped...")
 
     def table(self):
-        zipped = list(zip(rank_list, stripped_team, wins_list, draws_list, loses_list, points_list, goals_for, goals_against, goals_diff))
+        zipped = list(zip(rank_list, team_list, wins_list, draws_list, loses_list, points_list, goals_for, goals_against, goals_diff))
 
         df = pd.DataFrame(zipped, columns=['Rank', 'Team', 'Wins', 'Draws', 'Loses', 'Points', 'GF', 'GA', 'GD'])
 
