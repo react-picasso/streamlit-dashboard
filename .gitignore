@@ -1,0 +1,7 @@
+# created by virtualenv automatically
+config.py
+__pycache__
+bin/
+lib/
+share/
+*.cfg
