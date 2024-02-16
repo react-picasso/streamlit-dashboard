@@ -1,6 +1,6 @@
 from google.oauth2 import service_account
 from google.cloud import bigquery
-from config import standings_name, project_id, dataset_id
+from config import players_name, standings_name, project_id, dataset_id
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
@@ -21,34 +21,42 @@ def background_processing():
         data = [dict(data) for data in raw_data]
         return data
     
-    query = f"""
+    
+    standings_query = f"""
         SELECT * FROM {project_id}.{dataset_id}.{standings_name} ORDER BY Rank
     """
 
-    data = run_query(query)
+    players_query = f"""
+        SELECT * FROM {project_id}.{dataset_id}.{players_name} ORDER BY Goals DESC
+    """
 
-    df = pd.DataFrame(data=data)
+    standings_data = run_query(standings_query)
+    players_data = run_query(players_query)
 
-    df_index = pd.DataFrame(data=data)
-
-    return df
+    standings_df = pd.DataFrame(data=standings_data)
+    players_df = pd.DataFrame(data=players_data)
+    
+    return standings_df, players_df
 
 def streamlit_app():
-    df = background_processing()
-
-    st.title("La Liga statistics for 2022/23 ⚽️")
+    standings_df, players_df = background_processing()
 
     col1, col2 = st.columns((3,3))
 
-    with col1:
-        st.subheader("Current standings")
-        st.table(df)
+    col3, col4, col5, col6, col7 = st.columns((1, 1, 1, 1, 1))
 
-    with col2:
-        st.subheader("Points per team")
+    with st.container():
+        # Column one
+        col1.title("La Liga Statistics for 2022/23 " + "⚽️")
 
-        points = df['Points'].tolist()
-        points_selection = st.slider(
+        col1.subheader("Current standings")
+        col1.table(standings_df)
+
+        col1.subheader("Top Scorers")
+        col2.subheader("Points per team:")
+
+        points = standings_df['Points'].tolist()
+        points_selection = col2.slider(
             'Select a Range of Points:',
             min_value = min(points),
             max_value = max(points),
@@ -65,10 +73,10 @@ def streamlit_app():
         colors[-2] = 'crimson'
         colors[-3] = 'crimson'
 
-        mask = df['Points'].between(*points_selection)
-        results = df[mask].shape[0]
-        st.markdown(f"*Teams within range of selected points: {results}*")
-        df_grouped = df[mask]
+        mask = standings_df['Points'].between(*points_selection)
+        results = standings_df[mask].shape[0]
+        col2.markdown(f"*Teams within range of selected points: {results}*")
+        df_grouped = standings_df[mask]
         df_grouped = df_grouped.reset_index()
 
         points_chart = go.Figure(
@@ -90,6 +98,37 @@ def streamlit_app():
             )
         )
 
-        st.plotly_chart(points_chart, use_container_width=True)
+        col2.plotly_chart(points_chart, use_container_width=True)
+
+    with st.container():
+        # First top scorer
+        col3.markdown("**{}**".format(players_df.iloc[0][0]))
+        col3.markdown("**Goals:** {}".format(players_df.iloc[0][1]))
+        col3.markdown("**Team:** {}".format(players_df.iloc[0][2]))
+        col3.markdown("**Nationality:** {}".format(players_df.iloc[0][3]))
+
+        # Second top scorer
+        col4.markdown("**{}**".format(players_df.iloc[1][0]))
+        col4.markdown("**Goals:** {}".format(players_df.iloc[1][1]))
+        col4.markdown("**Team:** {}".format(players_df.iloc[1][2]))
+        col4.markdown("**Nationality:** {}".format(players_df.iloc[1][3]))
+
+        # Third top scorer
+        col5.markdown("**{}**".format(players_df.iloc[2][0]))
+        col5.markdown("**Goals:** {}".format(players_df.iloc[2][1]))
+        col5.markdown("**Team:** {}".format(players_df.iloc[2][2]))
+        col5.markdown("**Nationality:** {}".format(players_df.iloc[2][3]))
+
+        # Fourth top scorer
+        col6.markdown("**{}**".format(players_df.iloc[3][0]))
+        col6.markdown("**Goals:** {}".format(players_df.iloc[3][1]))
+        col6.markdown("**Team:** {}".format(players_df.iloc[3][2]))
+        col6.markdown("**Nationality:** {}".format(players_df.iloc[3][3]))
+
+        # Fifth top scorer
+        col7.markdown("**{}**".format(players_df.iloc[4][0]))
+        col7.markdown("**Goals:** {}".format(players_df.iloc[4][1]))
+        col7.markdown("**Team:** {}".format(players_df.iloc[4][2]))
+        col7.markdown("**Nationality:** {}".format(players_df.iloc[4][3]))
 
 streamlit_app()
