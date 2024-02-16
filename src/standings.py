@@ -1,4 +1,4 @@
-from config import rapid_api, table_name, dataset_id, project_id
+from config import rapid_api, standings_name, dataset_id, project_id
 import pandas as pd
 import requests
 import json
@@ -29,6 +29,9 @@ wins_list = []
 draws_list = []
 loses_list = []
 points_list = []
+goals_for = []
+goals_against = []
+goals_diff = []
 
 count = 0
 while count < 20:
@@ -38,6 +41,9 @@ while count < 20:
     draws_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["draw"])))
     loses_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["lose"])))
     points_list.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["points"])))
+    goals_for.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["goals"]["for"])))
+    goals_against.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["all"]["goals"]["against"])))
+    goals_diff.append(int(json.dumps(json_res["response"][0]["league"]["standings"][0][count]["goalsDiff"])))
     count += 1
 
 stripped_team = []
@@ -49,19 +55,19 @@ class Standings:
     def drop(self):
         client = bigquery.Client(project=project_id)
         query = f"""
-            DROP TABLE {project_id}.{dataset_id}.{table_name}
+            DROP TABLE {project_id}.{dataset_id}.{standings_name}
         """
         query_job = client.query(query)
-        print("Table dropped...")
+        print("Standings table dropped...")
 
     def table(self):
-        zipped = list(zip(rank_list, stripped_team, wins_list, draws_list, loses_list, points_list))
+        zipped = list(zip(rank_list, stripped_team, wins_list, draws_list, loses_list, points_list, goals_for, goals_against, goals_diff))
 
-        df = pd.DataFrame(zipped, columns=['Rank', 'Team', 'Wins', 'Draws', 'Loses', 'Points'])
+        df = pd.DataFrame(zipped, columns=['Rank', 'Team', 'Wins', 'Draws', 'Loses', 'Points', 'GF', 'GA', 'GD'])
 
         client = bigquery.Client(project=project_id)
 
-        table_id = f'{project_id}.{dataset_id}.{table_name}'
+        table_id = f'{project_id}.{dataset_id}.{standings_name}'
 
         job = client.load_table_from_dataframe(
             df, table_id
